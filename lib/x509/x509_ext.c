@@ -3618,13 +3618,14 @@ static gnutls_sign_algorithm_t get_sigalg(uint8_t hash_algo, uint8_t sig_algo)
 	for (unsigned i = 0; ; i++) {
 		algo = &algos[i];
 		if (algo->sign_algo == GNUTLS_SIGN_UNKNOWN ||
-		    algo->codepoint[0] == hash_algo && algo->codepoint[1] == sig_algo)
+		    (algo->codepoint[0] == hash_algo && algo->codepoint[1] == sig_algo))
 			break;
 	}
 
-	return algo->sign_algo == GNUTLS_SIGN_UNKNOWN
-		? GNUTLS_E_UNSUPPORTED_SIGNATURE_ALGORITHM
-		: algo->sign_algo;
+	if (algo->sign_algo == GNUTLS_SIGN_UNKNOWN)
+		return GNUTLS_E_UNSUPPORTED_SIGNATURE_ALGORITHM;
+
+	return algo->sign_algo;
 }
 
 static int write_sigalg(gnutls_sign_algorithm_t sigalg, uint8_t *out)
