@@ -3613,7 +3613,7 @@ static gnutls_sign_algorithm_t get_sigalg(uint8_t hash_algo, uint8_t sig_algo)
 	const struct sct_sign_algorithm_st *algo;
 
 	if (hash_algo == 0 || sig_algo == 0)
-		return GNUTLS_E_UNSUPPORTED_SIGNATURE_ALGORITHM;
+		return GNUTLS_SIGN_UNKNOWN;
 
 	for (unsigned i = 0; ; i++) {
 		algo = &algos[i];
@@ -3621,9 +3621,6 @@ static gnutls_sign_algorithm_t get_sigalg(uint8_t hash_algo, uint8_t sig_algo)
 		    (algo->codepoint[0] == hash_algo && algo->codepoint[1] == sig_algo))
 			break;
 	}
-
-	if (algo->sign_algo == GNUTLS_SIGN_UNKNOWN)
-		return GNUTLS_E_UNSUPPORTED_SIGNATURE_ALGORITHM;
 
 	return algo->sign_algo;
 }
@@ -3713,13 +3710,12 @@ static int _gnutls_parse_ct_sct(uint8_t *ptr, uint16_t length,
 	sig_algo = *ptr++;
 	length -= 2;
 
-	ret = get_sigalg(hash_algo, sig_algo);
-	if (ret < 0) {
+	sct->sigalg = get_sigalg(hash_algo, sig_algo);
+	if (sct->sigalg == GNUTLS_SIGN_UNKNOWN) {
 		gnutls_assert();
+		ret = GNUTLS_E_UNSUPPORTED_SIGNATURE_ALGORITHM;
 		goto cleanup;
 	}
-
-	sct->sigalg = ret;
 
 	if (length < 2) {
 		gnutls_assert();
@@ -3881,6 +3877,10 @@ int gnutls_x509_ext_ct_import_scts(const gnutls_datum_t *ext, gnutls_x509_ct_sct
 		ptr += sizeof(uint16_t);
 		length -= sizeof(uint16_t);
 
+		/*
+		 * _gnutls_parse_ct_sct() will try to read exactly sct_length bytes,
+		 * returning an error if it can't
+		 */
 		if (_gnutls_parse_ct_sct(ptr, sct_length, &sct) < 0)
 			break;
 		if (_gnutls_ct_sct_add(&sct, &scts->scts, &scts->size) < 0)

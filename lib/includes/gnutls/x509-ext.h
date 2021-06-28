@@ -208,11 +208,11 @@ int gnutls_x509_ext_ct_export_scts(const gnutls_x509_ct_scts_t scts, gnutls_datu
 int gnutls_x509_ct_sct_get_version(const gnutls_x509_ct_scts_t scts, unsigned idx,
 				   unsigned int *version_out);
 int gnutls_x509_ct_sct_v1_get(const gnutls_x509_ct_scts_t scts,
-				unsigned idx,
-				time_t *timestamp,
-				gnutls_datum_t *logid,
-				gnutls_sign_algorithm_t *sigalg,
-				gnutls_datum_t *signature);
+			      unsigned idx,
+			      time_t *timestamp,
+			      gnutls_datum_t *logid,
+			      gnutls_sign_algorithm_t *sigalg,
+			      gnutls_datum_t *signature);
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
